@@ -1,0 +1,8 @@
+config.ini
+**/build/
+**/dist/
+**/*.egg-info/
+**/__pycache__/
+*.pyc
+progress/Data/*
+progress/Results

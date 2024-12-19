@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "snl_progress"
+name = "progress"
 version = "0.0.5"
 description = "Used to evaluate the reliability of a power system and size energy storage systems required for maintaining a certain reliability level"
 authors = ["Atri Bera <abera@sandia.gov>"]
@@ -24,6 +24,7 @@ kneed = "0.8.5"
 requests = "2.32.3"
 pvlib = "0.11.0"
 NREL-rex = "0.2.86"
+PySide6 = "6.5.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"

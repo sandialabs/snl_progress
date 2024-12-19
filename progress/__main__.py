@@ -234,7 +234,7 @@ class MainAppWindow(QMainWindow):
         self.ui.pushButton_help_wind.clicked.connect(self.wind_process_help)
         self.ui.pushButton_4.clicked.connect(self.download_wind_data)
         self.ui.pushButton_7.clicked.connect(self.process_existing_wdata)
-        
+
 
         self.ui.pushButton_5.clicked.connect(self.run)
 
@@ -329,11 +329,11 @@ class MainAppWindow(QMainWindow):
     # Open help message box in the "solar" tab
     def show_help_api(self):
         QMessageBox.information(self, "API Help 1", "Signup for API key: https://developer.nrel.gov/signup/")
-        
+
     # Open help message box in the "solar" tab
     def show_help_name(self):
         QMessageBox.information(self, "API Help 2", "Use '+' instead of space for name and affiliation, e.g., john+doe.")
-        
+
     def show_skip_api(self):
         QMessageBox.information(self, "API Help 3", "You can skip this step if you are using your own data.")
 
@@ -365,11 +365,11 @@ class MainAppWindow(QMainWindow):
             self.ui.widget_5.setVisible(True)
             self.ui.pushButton_solar_dl.setVisible(True)
             self.ui.pushButton_solar_upload.setVisible(False)
-        elif index == 2:    
+        elif index == 2:
             self.ui.pushButton_solar_upload.setVisible(True)
             self.ui.textBrowser_4.setVisible(False)
             self.ui.widget_5.setVisible(False)
-            self.ui.pushButton_solar_dl.setVisible(False)            
+            self.ui.pushButton_solar_dl.setVisible(False)
             # self.ui.pushButton_DI_next_2.setVisible(True)
 
     def upload_solar_data(self):
@@ -378,7 +378,7 @@ class MainAppWindow(QMainWindow):
         # solar_prob_data = self.solar_directory+"/solar_probs.csv"
 
         # solar = Solar(solar_site_data, self.solar_directory)
-        
+
         # self.s_sites, self.s_zone_no, self.s_max, self.s_profiles, self.solar_prob = solar.GetSolarProfiles(solar_prob_data)
 
         QMessageBox.information(self, "Solar Upload", "Solar data uploaded and saved!")
@@ -525,7 +525,7 @@ class MainAppWindow(QMainWindow):
         solar_prob_data = self.solar_directory+"/solar_probs.csv"
 
         solar = Solar(solar_site_data, self.solar_directory)
-        
+
         self.s_sites, self.s_zone_no, self.s_max, self.s_profiles, self.solar_prob = solar.GetSolarProfiles(solar_prob_data)
 
     def wind_cb_changed(self, index):
@@ -539,7 +539,7 @@ class MainAppWindow(QMainWindow):
             self.ui.widget_9.setVisible(False)
             self.ui.pushButton_4.setVisible(False)
             self.ui.pushButton_wind_upload.setVisible(True)
-    
+
     def upload_wind_data(self):
 
         self.wind_directory = QFileDialog.getExistingDirectory(self, "Select Directory", "")
@@ -548,7 +548,7 @@ class MainAppWindow(QMainWindow):
         wind = Wind()
         self.w_sites, self.farm_name, self.zone_no, self.w_classes, self.w_turbines, self.r_cap, self.p_class, \
             self.out_curve2, self.out_curve3, self.start_speed = wind.WindFarmsData(self.wind_site_data, self.pcurve_data)
-        
+
         wind_tr_rate = self.wind_directory + '/t_rate.xlsx'
         if os.path.exists(wind_tr_rate):
             self.tr_mats = pd.read_excel(wind_tr_rate, sheet_name=None)
@@ -583,7 +583,7 @@ class MainAppWindow(QMainWindow):
         # Create a worker thread for the DownloadWindData method
         self.download_thread = WorkerThread(wind.DownloadWindData, self.wind_directory, self.wind_site_data, self.input_api_w, self.input_email_w, \
                                             self.input_aff_w, self.input_starty_w, self.input_endy_w)
-        
+
         self.download_thread.output_updated.connect(lambda text: self.handle_output(self.ui.textBrowser_3, text))
         # Connect the finished signal to handle thread completion
         self.download_thread.finished.connect(lambda: self.cal_wind_tr_rates())
@@ -984,61 +984,36 @@ class MainAppWindow(QMainWindow):
             self.plot_count = 0
 
     def load_plots(self):
-        try:
-            test_graph = os.path.join(base_dir, "Results", "solar_generation.pdf")
-            self.pdf_viewer = PDFViewer(test_graph)
-            self.ui.verticalLayout_55.addWidget(self.pdf_viewer.get_pdf_view())
-        except:
-            pass
+        # List of test graphs and their corresponding layout
+        graphs = [
+            ("solar_generation.pdf", self.ui.verticalLayout_55),
+            ("COV_track.pdf", self.ui.verticalLayout_46),
+            ("loadcurt.pdf", self.ui.verticalLayout_49),
+            ("LOLP_track.pdf", self.ui.verticalLayout_51),
+            ("SOC.pdf", self.ui.verticalLayout_53),
+            ("wind_generation.pdf", self.ui.verticalLayout_59),
+            ("heatmap.pdf", self.ui.verticalLayout_47),
+        ]
+        # Remove existing PDF viewers if they exist
+        for graph_name, layout in graphs:
+            viewer_attr_name = f"pdf_viewer_{graph_name.split('.')[0]}"
+            if hasattr(self, viewer_attr_name):
+                viewer = getattr(self, viewer_attr_name)
+                layout.removeWidget(viewer.get_pdf_view())  
+
+        # Load new plots
+        for graph_name, layout in graphs:
+            test_graph = os.path.join(base_dir, "Results", graph_name)
+
+            try:
+                # Create a new PDFViewer instance and add it to the layout
+                viewer = PDFViewer(test_graph)
+                layout.addWidget(viewer.get_pdf_view())
+                setattr(self, f"pdf_viewer_{graph_name.split('.')[0]}", viewer)
+            except Exception as e:
+                print(f"Failed to load {graph_name}: {e}")
 
 
-        try:
-            test_graph1 = os.path.join(base_dir, "Results", "COV_track.pdf")
-            self.pdf_viewer1 = PDFViewer(test_graph1)
-            self.ui.verticalLayout_46.addWidget(self.pdf_viewer1.get_pdf_view())
-        except:
-            pass
-
-        try:
-            test_graph2 = os.path.join(base_dir, "Results", "loadcurt.pdf")
-            self.pdf_viewer2 = PDFViewer(test_graph2)
-            self.ui.verticalLayout_49.addWidget(self.pdf_viewer2.get_pdf_view())
-
-        except:
-            pass
-
-        try:
-            test_graph3 = os.path.join(base_dir, "Results", "LOLP_track.pdf")
-            self.pdf_viewer3 = PDFViewer(test_graph3)
-            self.ui.verticalLayout_51.addWidget(self.pdf_viewer3.get_pdf_view())
-        except:
-            pass
-
-        try:
-
-            test_graph4 = os.path.join(base_dir, "Results", "SOC.pdf")
-            self.pdf_viewer4 = PDFViewer(test_graph4)
-            self.ui.verticalLayout_53.addWidget(self.pdf_viewer4.get_pdf_view())
-        except:
-            pass
-
-        try:
-        
-            test_graph5 = os.path.join(base_dir, "Results", "wind_generation.pdf")
-            self.pdf_viewer5 = PDFViewer(test_graph5)
-            self.ui.verticalLayout_59.addWidget(self.pdf_viewer5.get_pdf_view())
-        except:
-            pass
-
-        try:
-
-            test_graph6 = os.path.join(base_dir, "Results", "heatmap.pdf")
-            self.pdf_viewer6 = PDFViewer(test_graph6)
-            self.ui.verticalLayout_47.addWidget(self.pdf_viewer6.get_pdf_view())
-
-        except:
-            pass
-        
     def load_csv_files(self):
 
         csv_files = [
@@ -1054,11 +1029,19 @@ class MainAppWindow(QMainWindow):
                     print(f"Warning: {file_path} does not exist.")  # Log the warning
                     #QMessageBox.warning(self, "File Not Found", f"{file_path} does not exist.")
             except Exception as e:
-                print(f"Error loading {file_path}: {e}")  
+                print(f"Error loading {file_path}: {e}")
                 #QMessageBox.critical(self, "Error", f"Failed to load {file_path}: {e}")
 
     def load_csv_to_table(self, file_path):
-        # Create a new table for each CSV file
+        # Generate a dynamic attribute name based on the file name
+        table_attr_name = f"table_{os.path.basename(file_path).split('.')[0]}"
+
+        # Check if the table already exists and remove it if it does
+        if hasattr(self, table_attr_name):
+            existing_table = getattr(self, table_attr_name)
+            self.ui.verticalLayout_61.removeWidget(existing_table)
+
+        # Create a new table for the CSV file
         table = QTableWidget()
 
         # Load the CSV file into a pandas DataFrame
@@ -1077,8 +1060,34 @@ class MainAppWindow(QMainWindow):
                 item = QTableWidgetItem(str(df.iat[row, col]))
                 table.setItem(row, col, item)
 
-        # Add the table to the layout
+        # Add the new table to the layout
         self.ui.verticalLayout_61.addWidget(table)
+
+        # Store the new table in the instance for future reference
+        setattr(self, table_attr_name, table)
+
+    # def load_csv_to_table(self, file_path):
+    #     # Create a new table for each CSV file
+    #     table = QTableWidget()
+
+    #     # Load the CSV file into a pandas DataFrame
+    #     df = pd.read_csv(file_path)
+
+    #     # Set the table row and column count
+    #     table.setRowCount(df.shape[0])
+    #     table.setColumnCount(df.shape[1])
+
+    #     # Set the table headers
+    #     table.setHorizontalHeaderLabels(df.columns.tolist())
+
+    #     # Populate the table with data
+    #     for row in range(df.shape[0]):
+    #         for col in range(df.shape[1]):
+    #             item = QTableWidgetItem(str(df.iat[row, col]))
+    #             table.setItem(row, col, item)
+
+    #     # Add the table to the layout
+    #     self.ui.verticalLayout_61.addWidget(table)
 
 def main():
     """
